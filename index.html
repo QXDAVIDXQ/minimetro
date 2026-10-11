@@ -2,111 +2,50 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <!-- WICHTIG: Verhindert Zoomen und Skalieren auf mobilen Geräten -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mini Metro Klon</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Mini Metro - Stabile Basis</title>
     <style>
+        /* WICHTIG: Verhindert jegliches Scrollen, Wischen und Markieren auf Touchscreens */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #f8fafc;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            /* Zwingend erforderlich für reibungsloses Ziehen auf Mobilgeräten: */
+            background-color: #f0f4f8;
             touch-action: none; 
             user-select: none;
             -webkit-user-select: none;
+            font-family: sans-serif;
         }
+        
         canvas {
             display: block;
             width: 100%;
             height: 100%;
-            z-index: 10;
         }
-        #ui-layer {
+
+        #ui {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            z-index: 20;
+            top: 20px;
+            left: 20px;
+            pointer-events: none; /* UI blockiert keine Touch-Eingaben */
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .pointer-auto {
-            pointer-events: auto;
-        }
-        #game-over-screen, #start-screen {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            pointer-events: auto;
-        }
-        .hidden { display: none !important; }
+
+        h1 { margin: 0 0 5px 0; font-size: 18px; color: #333; }
+        p { margin: 0; font-size: 14px; color: #666; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer" class="p-4 md:p-6">
-        <div class="flex justify-between items-start">
-            <div class="pointer-auto bg-white/90 px-5 py-3 rounded-2xl shadow-sm border border-slate-200">
-                <h1 class="text-xl font-bold text-slate-800">Metro Simulator</h1>
-                <p class="text-sm text-slate-500">Punkte: <span id="score-display" class="font-bold text-blue-600 text-lg">0</span></p>
-            </div>
-            
-            <div class="pointer-auto bg-white/90 px-4 py-3 rounded-2xl shadow-sm border border-slate-200 text-right">
-                <p class="text-xs text-slate-500 font-semibold mb-1 uppercase tracking-wide">Linien</p>
-                <div id="available-lines" class="flex gap-2 justify-end">
-                    <!-- Linien-Indikatoren werden hier via JS eingefügt -->
-                </div>
-            </div>
-        </div>
-        
-        <div class="pointer-auto self-center mb-6">
-            <p id="event-toast" class="opacity-0 transition-opacity duration-300 bg-red-500 text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg">
-                Event!
-            </p>
-        </div>
-    </div>
-
-    <!-- Start Screen -->
-    <div id="start-screen">
-        <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full mx-4 text-center border border-slate-100">
-            <h2 class="text-3xl font-black text-slate-800 mb-2">Metro Klon</h2>
-            <p class="text-slate-600 mb-6 text-sm">Ziehe mit dem Finger von Station zu Station, um Linien zu bauen. Passagiere steigen automatisch ein.</p>
-            <ul class="text-left text-sm text-slate-600 space-y-2 mb-6">
-                <li>🔴 <strong>Überfüllung:</strong> Max. 6 wartende Passagiere!</li>
-                <li>⚽ <strong>Fußballspiel:</strong> Plötzlicher Passagier-Ansturm.</li>
-                <li>⚠️ <strong>Schienenschaden:</strong> Ein Zug bleibt kurz liegen.</li>
-            </ul>
-            <button onclick="startGame()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-transform active:scale-95">
-                Spielen
-            </button>
-        </div>
-    </div>
-
-    <!-- Game Over Screen -->
-    <div id="game-over-screen" class="hidden">
-        <div class="bg-white p-8 rounded-3xl shadow-xl max-w-sm w-full mx-4 text-center border border-slate-100">
-            <h2 class="text-4xl font-black text-slate-800 mb-1">Überfüllt!</h2>
-            <p class="text-slate-500 mb-6">Eine Station ist kollabiert.</p>
-            <div class="bg-slate-50 rounded-2xl p-6 mb-6">
-                <p class="text-sm font-semibold text-slate-400 uppercase tracking-widest">Punkte</p>
-                <p id="final-score" class="text-6xl font-black text-blue-600 mt-1">0</p>
-            </div>
-            <button onclick="location.reload()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-transform active:scale-95">
-                Nochmal versuchen
-            </button>
-        </div>
+    <div id="ui">
+        <h1>Metro Basis</h1>
+        <p>Ziehe Linien zwischen den Stationen.</p>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -114,150 +53,42 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // Farben für die Linien
+        const COLORS = ['#e6194B', '#3cb44b', '#4363d8', '#f58231', '#911eb4'];
         
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Game Constants & Configuration
-        const SHAPES = ['circle', 'triangle', 'square'];
-        const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-        const MAX_STATION_CAPACITY = 6;
-        const OVERCROWD_TIME_LIMIT = 15000; // 15 Sekunden bis Game Over
-        const TRAIN_CAPACITY = 6;
-        const TRAIN_SPEED = 0.04;
-
-        // Game State
-        let gameState = {
-            isRunning: false,
-            score: 0,
-            lastTime: 0,
-            timeSinceStationSpawn: 0,
-            timeSincePassengerSpawn: 0,
-            stationSpawnRate: 8000,
-            passengerSpawnRate: 4000,
-            availableColors: [...COLORS.slice(0, 3)], // Start mit 3 Linien
-            colorPool: [...COLORS.slice(3)]
-        };
-
+        // Spiel-Objekte
         let stations = [];
         let lines = [];
         let trains = [];
 
-        // Interaction State
-        let dragState = {
-            isDragging: false,
-            startStation: null,
-            currentLine: null, // Die Linie, die gerade erweitert wird
-            mouseX: 0,
-            mouseY: 0
-        };
+        // Interaktions-Status
+        let isDragging = false;
+        let dragStartStation = null;
+        let pointerX = 0;
+        let pointerY = 0;
 
-        function drawShape(ctx, type, x, y, size, isOutline = false) {
-            ctx.beginPath();
-            if (type === 'circle') {
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-            } else if (type === 'triangle') {
-                ctx.moveTo(x, y - size * 1.1);
-                ctx.lineTo(x + size * 1.2, y + size * 0.9);
-                ctx.lineTo(x - size * 1.2, y + size * 0.9);
-                ctx.closePath();
-            } else if (type === 'square') {
-                ctx.rect(x - size, y - size, size * 2, size * 2);
-            }
-
-            if (isOutline) {
-                ctx.stroke();
-            } else {
-                ctx.fill();
-            }
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         }
-
-        function getDist(x1, y1, x2, y2) {
-            return Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('event-toast');
-            toast.innerText = message;
-            toast.classList.remove('opacity-0');
-            setTimeout(() => toast.classList.add('opacity-0'), 3000);
-        }
+        window.addEventListener('resize', resize);
+        resize();
 
         class Station {
-            constructor(x, y, type) {
+            constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.type = type;
-                this.passengers = [];
-                this.radius = 16;
-                this.overcrowdTimer = 0;
-                this.footballEvent = false;
-                this.footballTimer = 0;
+                this.radius = 15;
             }
-
-            update(dt) {
-                // Überfüllungslogik
-                if (this.passengers.length > MAX_STATION_CAPACITY) {
-                    this.overcrowdTimer += dt;
-                    if (this.overcrowdTimer >= OVERCROWD_TIME_LIMIT) {
-                        endGame();
-                    }
-                } else {
-                    this.overcrowdTimer = Math.max(0, this.overcrowdTimer - dt * 2); // Schneller abbauen
-                }
-
-                // Fußball Event Logik
-                if (this.footballEvent) {
-                    this.footballTimer -= dt;
-                    if (this.footballTimer <= 0) {
-                        this.footballEvent = false;
-                    }
-                }
-            }
-
             draw() {
-                // Überfüllungs-Indikator
-                if (this.overcrowdTimer > 0) {
-                    const progress = this.overcrowdTimer / OVERCROWD_TIME_LIMIT;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius + 10, -Math.PI/2, (-Math.PI/2) + (Math.PI * 2 * progress));
-                    ctx.strokeStyle = progress > 0.8 ? '#ef4444' : '#94a3b8';
-                    ctx.lineWidth = 6;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
-                }
-
-                // Stationskörper
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffffff';
-                ctx.strokeStyle = '#0f172a';
+                ctx.fill();
                 ctx.lineWidth = 4;
-                ctx.lineJoin = 'round';
-                drawShape(ctx, this.type, this.x, this.y, this.radius, false);
-                drawShape(ctx, this.type, this.x, this.y, this.radius, true);
-
-                // Passagiere
-                ctx.fillStyle = '#1e293b';
-                this.passengers.forEach((pType, i) => {
-                    const cols = 3;
-                    const row = Math.floor(i / cols);
-                    const col = i % cols;
-                    const px = this.x + 24 + (col * 12);
-                    const py = this.y - 12 + (row * 12);
-                    drawShape(ctx, pType, px, py, 3.5, false);
-                });
-
-                // Fußball Event Icon
-                if (this.footballEvent) {
-                    ctx.font = '24px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    const bounce = Math.sin(Date.now() / 150) * 5;
-                    ctx.fillText('⚽', this.x, this.y - 30 + bounce);
-                }
+                ctx.strokeStyle = '#333333';
+                ctx.stroke();
             }
         }
 
@@ -268,16 +99,16 @@
             }
             draw() {
                 if (this.stations.length < 2) return;
-                ctx.strokeStyle = this.color;
-                ctx.lineWidth = 10;
-                ctx.lineJoin = 'round';
-                ctx.lineCap = 'round';
                 
                 ctx.beginPath();
                 ctx.moveTo(this.stations[0].x, this.stations[0].y);
                 for (let i = 1; i < this.stations.length; i++) {
                     ctx.lineTo(this.stations[i].x, this.stations[i].y);
                 }
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = this.color;
                 ctx.stroke();
             }
         }
@@ -285,380 +116,167 @@
         class Train {
             constructor(line) {
                 this.line = line;
-                this.prevIdx = 0;
-                this.targetIdx = 1;
-                this.direction = 1;
-                this.progress = 0;
-                this.passengers = [];
+                this.currentIndex = 0;
+                this.targetIndex = 1;
+                this.direction = 1; // 1 = vorwärts, -1 = rückwärts
+                this.progress = 0; // 0.0 bis 1.0 zwischen zwei Stationen
+                this.speed = 0.015; // Konstante einfache Geschwindigkeit
                 this.x = line.stations[0].x;
                 this.y = line.stations[0].y;
-                
-                this.brokenTimer = 0; // Für Schienenschaden
             }
 
-            update(dt) {
-                if (this.brokenTimer > 0) {
-                    this.brokenTimer -= dt;
-                    return; // Zug steht still
-                }
-
+            update() {
                 if (this.line.stations.length < 2) return;
-                
-                // Sicherheit, falls Linie editiert wurde
-                if (this.targetIdx >= this.line.stations.length) {
-                    this.direction = -1;
-                    this.targetIdx = this.line.stations.length - 2;
-                    this.prevIdx = this.line.stations.length - 1;
-                }
 
-                const prev = this.line.stations[this.prevIdx];
-                const target = this.line.stations[this.targetIdx];
-                
-                // Geschwindigkeit basierend auf Distanz, um konstantes Tempo zu halten
-                const dist = getDist(prev.x, prev.y, target.x, target.y);
-                const speed = (TRAIN_SPEED * dt) / Math.max(1, dist);
-                this.progress += speed;
+                // Bewege Zug
+                this.progress += this.speed;
 
                 if (this.progress >= 1) {
                     this.progress = 0;
-                    this.handleStationArrival(target);
-                    
-                    this.prevIdx = this.targetIdx;
-                    this.targetIdx += this.direction;
-                    
-                    // Umkehren an den Enden
-                    if (this.targetIdx >= this.line.stations.length || this.targetIdx < 0) {
+                    this.currentIndex = this.targetIndex;
+                    this.targetIndex += this.direction;
+
+                    // Richtung umkehren, wenn das Ende der Linie erreicht ist
+                    if (this.targetIndex >= this.line.stations.length || this.targetIndex < 0) {
                         this.direction *= -1;
-                        this.targetIdx = this.prevIdx + this.direction;
+                        this.targetIndex = this.currentIndex + this.direction;
                     }
                 }
 
-                this.x = prev.x + (target.x - prev.x) * this.progress;
-                this.y = prev.y + (target.y - prev.y) * this.progress;
-            }
-
-            handleStationArrival(station) {
-                // 1. Aussteigen
-                const remaining = [];
-                for (let p of this.passengers) {
-                    if (p === station.type) {
-                        gameState.score++;
-                        updateScore();
-                    } else {
-                        remaining.push(p);
-                    }
-                }
-                this.passengers = remaining;
-
-                // 2. Einsteigen (Intelligentes Boarding: Fährt die Linie zum Ziel?)
-                const waiting = [];
-                const lineTypes = new Set(this.line.stations.map(s => s.type));
+                // Berechne aktuelle X/Y Position
+                const start = this.line.stations[this.currentIndex];
+                const end = this.line.stations[this.targetIndex];
                 
-                for (let p of station.passengers) {
-                    if (this.passengers.length < TRAIN_CAPACITY && lineTypes.has(p)) {
-                        this.passengers.push(p);
-                    } else {
-                        waiting.push(p);
-                    }
+                if (start && end) {
+                    this.x = start.x + (end.x - start.x) * this.progress;
+                    this.y = start.y + (end.y - start.y) * this.progress;
                 }
-                station.passengers = waiting;
             }
 
             draw() {
-                const prev = this.line.stations[this.prevIdx];
-                const target = this.line.stations[this.targetIdx];
-                if (!prev || !target) return;
-
-                const angle = Math.atan2(target.y - prev.y, target.x - prev.x);
-                
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(angle);
-                
-                // Zugkörper
                 ctx.fillStyle = this.line.color;
                 ctx.beginPath();
-                ctx.roundRect(-14, -9, 28, 18, 4);
+                // Zeichne den Zug als kleines Rechteck
+                ctx.roundRect(this.x - 12, this.y - 8, 24, 16, 4);
                 ctx.fill();
-
-                // Passagiere im Zug
-                ctx.fillStyle = '#ffffff';
-                ctx.rotate(-angle); // Zurückdrehen, damit Passagiere aufrecht sind
-                
-                for(let i=0; i<this.passengers.length; i++) {
-                    const px = -8 + (i % 3) * 8;
-                    const py = i < 3 ? -4 : 4;
-                    drawShape(ctx, this.passengers[i], px, py, 2.5, false);
-                }
-                
-                // Schienenschaden Icon
-                if (this.brokenTimer > 0) {
-                    ctx.font = '20px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('⚠️', 0, -25);
-                }
-
-                ctx.restore();
             }
         }
 
-        function spawnStation() {
-            let type = SHAPES[Math.floor(Math.random() * SHAPES.length)];
-            // Anfangs garantieren wir, dass alle 3 Typen da sind
-            if (stations.length < 3) type = SHAPES[stations.length];
+        function getDistance(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+        }
 
-            let x, y, valid = false;
+        function spawnInitialStations() {
+            // Spawne genau 5 Stationen, die sich nicht überlappen
             let attempts = 0;
-            
-            while (!valid && attempts < 50) {
-                // Abstand vom Rand und UI lassen
-                x = 60 + Math.random() * (canvas.width - 120);
-                y = 100 + Math.random() * (canvas.height - 160);
-                valid = true;
+            while (stations.length < 5 && attempts < 100) {
+                let x = 50 + Math.random() * (canvas.width - 100);
+                let y = 100 + Math.random() * (canvas.height - 150);
                 
+                let valid = true;
                 for (let s of stations) {
-                    if (getDist(x, y, s.x, s.y) < 100) {
+                    if (getDistance(x, y, s.x, s.y) < 80) {
                         valid = false;
                         break;
                     }
                 }
+                
+                if (valid) {
+                    stations.push(new Station(x, y));
+                }
                 attempts++;
             }
-
-            if (valid) stations.push(new Station(x, y, type));
         }
 
-        function spawnPassenger(specificStation = null) {
-            if (stations.length < 2) return;
-            const station = specificStation || stations[Math.floor(Math.random() * stations.length)];
-            
-            // Finde ein mögliches Ziel, das nicht die eigene Station ist
-            const typesOnMap = [...new Set(stations.map(s => s.type))];
-            const validDestinations = typesOnMap.filter(t => t !== station.type);
-            
-            if (validDestinations.length > 0) {
-                const dest = validDestinations[Math.floor(Math.random() * validDestinations.length)];
-                station.passengers.push(dest);
-            }
-        }
-
-        function triggerFootballEvent() {
-            if (stations.length < 3) return;
-            const station = stations[Math.floor(Math.random() * stations.length)];
-            station.footballEvent = true;
-            station.footballTimer = 10000;
-            
-            showToast("⚽ Fußballspiel! Ansturm!");
-            
-            // Spawne schnell viele Passagiere
-            let count = 0;
-            const interval = setInterval(() => {
-                if(count > 8 || !gameState.isRunning) {
-                    clearInterval(interval);
-                    return;
-                }
-                spawnPassenger(station);
-                count++;
-            }, 300);
-        }
-
-        function triggerTrackDamage() {
-            if (trains.length === 0) return;
-            const train = trains[Math.floor(Math.random() * trains.length)];
-            train.brokenTimer = 8000; // Zug fällt für 8s aus
-            showToast("⚠️ Schienenschaden! Zug blockiert!");
-        }
-
-        function getStationAt(x, y) {
-            return stations.find(s => getDist(x, y, s.x, s.y) < s.radius * 2.5); // Etwas größerer Touch-Bereich
-        }
-
-        function handlePointerDown(e) {
-            if (!gameState.isRunning) return;
-            const x = e.clientX;
-            const y = e.clientY;
-            
-            const station = getStationAt(x, y);
-            if (station) {
-                dragState.isDragging = true;
-                dragState.startStation = station;
-                dragState.mouseX = x;
-                dragState.mouseY = y;
-                dragState.currentLine = null;
-
-                // Prüfen, ob die Station am Ende einer existierenden Linie liegt
-                for (let line of lines) {
-                    if (line.stations[0] === station || line.stations[line.stations.length - 1] === station) {
-                        dragState.currentLine = line;
-                        break;
-                    }
+        function getHitStation(x, y) {
+            // Prüft, ob der Finger/die Maus auf eine Station tippt (mit großzügigem Radius für Touch)
+            for (let s of stations) {
+                if (getDistance(x, y, s.x, s.y) < s.radius * 3) {
+                    return s;
                 }
             }
+            return null;
         }
 
-        function handlePointerMove(e) {
-            if (!dragState.isDragging) return;
-            dragState.mouseX = e.clientX;
-            dragState.mouseY = e.clientY;
-        }
-
-        function handlePointerUp(e) {
-            if (!dragState.isDragging) return;
-            dragState.isDragging = false;
-            
-            const station = getStationAt(dragState.mouseX, dragState.mouseY);
-            
-            if (station && station !== dragState.startStation) {
-                if (dragState.currentLine) {
-                    // Existierende Linie erweitern (wenn Station nicht schon Teil der Linie ist)
-                    if (!dragState.currentLine.stations.includes(station)) {
-                        if (dragState.currentLine.stations[0] === dragState.startStation) {
-                            dragState.currentLine.stations.unshift(station);
-                        } else {
-                            dragState.currentLine.stations.push(station);
-                        }
-                    }
-                } else if (gameState.availableColors.length > 0) {
-                    // Neue Linie bauen
-                    const color = gameState.availableColors.shift();
-                    const newLine = new Line(color);
-                    newLine.stations.push(dragState.startStation, station);
-                    lines.push(newLine);
-                    trains.push(new Train(newLine));
-                    updateUI();
-                }
+        canvas.addEventListener('pointerdown', (e) => {
+            const hit = getHitStation(e.clientX, e.clientY);
+            if (hit) {
+                isDragging = true;
+                dragStartStation = hit;
+                pointerX = e.clientX;
+                pointerY = e.clientY;
             }
-        }
+        });
 
-        // Nutze Pointer Events für universelle Touch & Maus Unterstützung
-        canvas.addEventListener('pointerdown', handlePointerDown);
-        canvas.addEventListener('pointermove', handlePointerMove);
-        window.addEventListener('pointerup', handlePointerUp);
-
-        // Verhindere Scrollen beim Wischen auf Mobilgeräten zwingend!
-        canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
-        canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-
-        function updateScore() {
-            document.getElementById('score-display').innerText = gameState.score;
-            
-            // Belohnungssystem: Alle 40 Punkte eine neue Farbe/Linie
-            if (gameState.score > 0 && gameState.score % 40 === 0 && gameState.colorPool.length > 0) {
-                gameState.availableColors.push(gameState.colorPool.shift());
-                showToast("🚄 Neue Linie verfügbar!");
-                updateUI();
+        // Wir hören auf 'window', damit die Linie nicht abbricht, wenn der Finger den Canvas verlässt
+        window.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                pointerX = e.clientX;
+                pointerY = e.clientY;
             }
-        }
+        });
 
-        function updateUI() {
-            const container = document.getElementById('available-lines');
-            container.innerHTML = '';
-            gameState.availableColors.forEach(color => {
-                const dot = document.createElement('div');
-                dot.style.backgroundColor = color;
-                dot.className = 'w-4 h-4 md:w-5 md:h-5 rounded-full shadow-sm border-2 border-white';
-                container.appendChild(dot);
-            });
-            if (gameState.availableColors.length === 0) {
-                container.innerHTML = '<span class="text-xs text-slate-400">Keine</span>';
+        window.addEventListener('pointerup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const hit = getHitStation(pointerX, pointerY);
+            
+            // Wenn wir auf einer ANDEREN Station losgelassen haben
+            if (hit && hit !== dragStartStation) {
+                // Erstelle eine neue Linie
+                let color = COLORS[lines.length % COLORS.length];
+                let newLine = new Line(color);
+                newLine.stations.push(dragStartStation, hit);
+                lines.push(newLine);
+                
+                // Füge sofort einen Zug auf dieser Linie hinzu
+                trains.push(new Train(newLine));
             }
-        }
-
-        function endGame() {
-            gameState.isRunning = false;
-            document.getElementById('game-over-screen').classList.remove('hidden');
-            document.getElementById('final-score').innerText = gameState.score;
-        }
-
-        function startGame() {
-            document.getElementById('start-screen').classList.add('hidden');
             
-            // Reset state
-            stations = [];
-            lines = [];
-            trains = [];
-            gameState.score = 0;
-            gameState.availableColors = [...COLORS.slice(0, 3)];
-            gameState.colorPool = [...COLORS.slice(3)];
-            
-            // Initial stations
-            for(let i=0; i<3; i++) spawnStation();
-            
-            updateScore();
-            updateUI();
-            
-            gameState.isRunning = true;
-            gameState.lastTime = performance.now();
-            requestAnimationFrame(gameLoop);
-        }
+            dragStartStation = null;
+        });
 
-        function gameLoop(timestamp) {
-            if (!gameState.isRunning) return;
-            
-            const dt = timestamp - gameState.lastTime;
-            gameState.lastTime = timestamp;
-
-            // Spawning Logic
-            gameState.timeSinceStationSpawn += dt;
-            if (gameState.timeSinceStationSpawn > gameState.stationSpawnRate) {
-                spawnStation();
-                gameState.timeSinceStationSpawn = 0;
-                // Wird langsam schwieriger
-                gameState.stationSpawnRate = Math.max(4000, gameState.stationSpawnRate - 100);
-            }
-
-            gameState.timeSincePassengerSpawn += dt;
-            if (gameState.timeSincePassengerSpawn > gameState.passengerSpawnRate) {
-                spawnPassenger();
-                gameState.timeSincePassengerSpawn = 0;
-                // Mehr Passagiere bei hohem Score
-                gameState.passengerSpawnRate = Math.max(800, 4000 - (gameState.score * 20));
-            }
-
-            // Zufällige Events triggern
-            if (Math.random() < 0.0003 && gameState.score > 20) triggerFootballEvent();
-            if (Math.random() < 0.0002 && gameState.score > 30) triggerTrackDamage();
-
-            // Updates
-            stations.forEach(s => s.update(dt));
-            trains.forEach(t => t.update(dt));
-
-            // Rendern
+        function gameLoop() {
+            // Hintergrund löschen
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Gitter-Hintergrund für den "Planer"-Look
-            ctx.strokeStyle = '#f1f5f9';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for(let i=0; i<canvas.width; i+=40) { ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); }
-            for(let i=0; i<canvas.height; i+=40) { ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); }
-            ctx.stroke();
+            // 1. Fertige Linien zeichnen
+            for (let line of lines) {
+                line.draw();
+            }
 
-            // Bestehende Linien
-            lines.forEach(l => l.draw());
-
-            // Zieh-Linie (Drag Preview)
-            if (dragState.isDragging && dragState.startStation) {
-                ctx.strokeStyle = dragState.currentLine ? dragState.currentLine.color : (gameState.availableColors[0] || '#cbd5e1');
-                ctx.lineWidth = 8;
-                ctx.lineCap = 'round';
-                ctx.setLineDash([12, 12]);
+            // 2. Aktuelle Zieh-Linie zeichnen (Drag Preview)
+            if (isDragging && dragStartStation) {
                 ctx.beginPath();
-                ctx.moveTo(dragState.startStation.x, dragState.startStation.y);
-                ctx.lineTo(dragState.mouseX, dragState.mouseY);
+                ctx.moveTo(dragStartStation.x, dragStartStation.y);
+                ctx.lineTo(pointerX, pointerY);
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.setLineDash([10, 10]); // Gestrichelte Linie
+                ctx.strokeStyle = '#999999';
                 ctx.stroke();
                 ctx.setLineDash([]); // Reset
             }
 
-            // Stationen
-            stations.forEach(s => s.draw());
+            // 3. Stationen zeichnen
+            for (let station of stations) {
+                station.draw();
+            }
 
-            // Züge
-            trains.forEach(t => t.draw());
+            // 4. Züge updaten und zeichnen
+            for (let train of trains) {
+                train.update();
+                train.draw();
+            }
 
+            // Schleife wiederholen
             requestAnimationFrame(gameLoop);
         }
+
+        // Spiel starten
+        spawnInitialStations();
+        requestAnimationFrame(gameLoop);
 
     </script>
 </body>
